@@ -142,17 +142,22 @@ app.post("/oauth/register", registrationLimiter, (req, res) => {
 app.get("/oauth/authorize", authLimiter, (req, res) => {
   const result = handleAuthorize(req.query as any);
   if ("redirectUrl" in result) {
+    log.info({ clientId: (req.query as any).client_id }, "oauth: authorize → google");
     res.redirect(result.redirectUrl);
   } else {
+    log.warn({ err: result.error, query: req.query }, "oauth: authorize failed");
     res.status(400).json(result);
   }
 });
 
 app.get("/oauth/google-callback", async (req, res) => {
+  log.info({ hasCode: !!(req.query as any).code, hasState: !!(req.query as any).state }, "oauth: google-callback received");
   const result = await handleGoogleCallback(req.query as any);
   if ("redirectUrl" in result) {
+    log.info("oauth: google-callback → redirecting to mcp client");
     res.redirect(result.redirectUrl);
   } else {
+    log.error({ err: result.error }, "oauth: google-callback failed");
     res.status(400).send(`
       <html><body>
         <h1>Authentication Failed</h1>
@@ -166,8 +171,10 @@ app.get("/oauth/google-callback", async (req, res) => {
 app.post("/oauth/token", authLimiter, async (req, res) => {
   const result = await handleTokenExchange(req.body);
   if ("tokens" in result) {
+    log.info({ grantType: req.body?.grant_type }, "oauth: token issued");
     res.json(result.tokens);
   } else {
+    log.warn({ err: result.error, grantType: req.body?.grant_type, status: result.status }, "oauth: token exchange failed");
     res.status(result.status).json({ error: result.error });
   }
 });
@@ -631,21 +638,36 @@ app.post("/mcp", mcpLimiter, async (req, res) => {
     if (sessionId && transports.has(sessionId)) {
       // Reuse existing session
       transport = transports.get(sessionId)!;
+    } else if (sessionId && !transports.has(sessionId)) {
+      // Client is holding a stale session ID (e.g. we restarted). Per MCP
+      // Streamable HTTP spec, a 404 tells the client to re-initialize. A 400
+      // here makes Claude Desktop render the connector as "no tools" forever.
+      log.info({ sessionId, method: req.body?.method }, "mcp: unknown session id → 404");
+      res.status(404).json({
+        jsonrpc: "2.0",
+        error: { code: -32001, message: "Session not found — please reinitialize" },
+        id: req.body?.id ?? null,
+      });
+      return;
     } else if (!sessionId && isInitializeRequest(req.body)) {
       // ── New session ─────────────────────────────────────────────
       // Resolve auth: if token provided, try to get Google token for full access
       let mcpServer: McpServer;
+      let mode: "full" | "docs-only";
 
       if (sessionToken) {
         const googleToken = await getGoogleTokenForSession(sessionToken);
         if (googleToken) {
           // Authenticated → full server with docs + GTM tools
           mcpServer = createFullMcpServer(googleToken);
+          mode = "full";
         } else {
           // A token was presented but we can't resolve it — tell the client to
-          // re-auth instead of silently downgrading. Silent downgrade leaves
-          // Claude Desktop / ChatGPT thinking they're fully connected while
-          // GTM tools mysteriously fail.
+          // re-auth instead of silently downgrading.
+          log.warn(
+            { tokenPrefix: sessionToken.slice(0, 8) },
+            "mcp: bearer token provided but not resolvable → 401"
+          );
           res.set(
             "WWW-Authenticate",
             `Bearer resource_metadata="${BASE_URL}/.well-known/oauth-protected-resource"`
@@ -660,6 +682,7 @@ app.post("/mcp", mcpLimiter, async (req, res) => {
       } else {
         // No auth header at all → docs-only mode (anonymous access is a feature).
         mcpServer = createDocsOnlyServer();
+        mode = "docs-only";
       }
 
       transport = new StreamableHTTPServerTransport({
@@ -673,6 +696,7 @@ app.post("/mcp", mcpLimiter, async (req, res) => {
       if (newSessionId) {
         transports.set(newSessionId, transport);
       }
+      log.info({ sessionId: newSessionId, mode, clients: transports.size }, "mcp: new session");
     } else {
       res.status(400).json({
         jsonrpc: "2.0",
@@ -699,7 +723,7 @@ app.post("/mcp", mcpLimiter, async (req, res) => {
 app.get("/mcp", async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
   if (!sessionId || !transports.has(sessionId)) {
-    res.status(400).json({ error: "No active session" });
+    res.status(404).json({ error: "No active session — reinitialize via POST /mcp" });
     return;
   }
   const transport = transports.get(sessionId)!;
