@@ -685,18 +685,27 @@ app.post("/mcp", mcpLimiter, async (req, res) => {
         mode = "docs-only";
       }
 
+      // Capture the session ID when the transport generates it during the
+      // init request. Reading transport.sessionId immediately after connect()
+      // is a race — it's undefined until the transport actually processes the
+      // init, which happens inside handleRequest() below.
+      const storedMode = mode;
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
+        onsessioninitialized: (newSessionId) => {
+          transports.set(newSessionId, transport);
+          log.info(
+            { sessionId: newSessionId, mode: storedMode, clients: transports.size },
+            "mcp: new session"
+          );
+        },
+        onsessionclosed: (closedSessionId) => {
+          transports.delete(closedSessionId);
+          log.info({ sessionId: closedSessionId, clients: transports.size }, "mcp: session closed");
+        },
       });
 
       await mcpServer.connect(transport);
-
-      // Store transport for session reuse
-      const newSessionId = (transport as any).sessionId;
-      if (newSessionId) {
-        transports.set(newSessionId, transport);
-      }
-      log.info({ sessionId: newSessionId, mode, clients: transports.size }, "mcp: new session");
     } else {
       res.status(400).json({
         jsonrpc: "2.0",
