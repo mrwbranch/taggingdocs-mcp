@@ -154,17 +154,66 @@ app.get("/oauth/google-callback", async (req, res) => {
   log.info({ hasCode: !!(req.query as any).code, hasState: !!(req.query as any).state }, "oauth: google-callback received");
   const result = await handleGoogleCallback(req.query as any);
   if ("redirectUrl" in result) {
-    log.info("oauth: google-callback → redirecting to mcp client");
-    res.redirect(result.redirectUrl);
+    log.info("oauth: google-callback → success page + redirect to mcp client");
+    // A plain 302 to the MCP client's redirect_uri triggers a claude:// deep
+    // link that the browser tab can't navigate to, leaving the user staring
+    // at a spinner on the Google consent page. Return an HTML handoff page
+    // instead: shows a clear "success, close this tab" state, then follows
+    // through to the MCP client redirect so Claude Desktop / ChatGPT get the
+    // auth code, and tries to auto-close the popup on the way out.
+    const safeUrl = result.redirectUrl.replace(/"/g, "&quot;");
+    res.status(200).send(`<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <title>Authentication successful — TaggingDocs MCP</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root { --bg:#0f172a; --fg:#e2e8f0; --muted:#94a3b8; --accent:#60a5fa; --card:#1e293b; --border:#334155; }
+    @media (prefers-color-scheme: light) { :root { --bg:#fafafa; --fg:#1a1a2e; --muted:#6b7280; --accent:#2563eb; --card:#fff; --border:#e5e7eb; } }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html,body { height:100%; }
+    body { display:flex; align-items:center; justify-content:center; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--fg); padding:24px; }
+    .card { max-width:420px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:32px; text-align:center; }
+    .check { width:56px; height:56px; margin:0 auto 16px; border-radius:50%; background:rgba(34,197,94,0.15); color:#22c55e; display:flex; align-items:center; justify-content:center; font-size:28px; }
+    h1 { font-size:1.25rem; font-weight:600; margin-bottom:8px; }
+    p { color:var(--muted); font-size:0.95rem; line-height:1.5; margin-bottom:16px; }
+    .hint { color:var(--muted); font-size:0.8rem; margin-top:16px; }
+    a { color:var(--accent); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+  </style>
+  <script>
+    // Send the auth code to the MCP client (Claude / ChatGPT / etc) as soon
+    // as possible. The MCP client will open via deep link; after that the
+    // browser tab has nothing left to display so we try to close it.
+    (function () {
+      var target = "${safeUrl}";
+      // Nudge the redirect first so the client gets its code, then try to close.
+      // Some browsers refuse window.close() on tabs the script didn't open —
+      // falling back to the success message is fine.
+      setTimeout(function () { window.location.replace(target); }, 150);
+      setTimeout(function () { try { window.close(); } catch (e) {} }, 1500);
+    })();
+  </script>
+</head><body>
+  <div class="card">
+    <div class="check">&#10003;</div>
+    <h1>Signed in to TaggingDocs MCP</h1>
+    <p>Authentication complete. Returning you to your AI client…</p>
+    <p class="hint">You can close this tab. If nothing happens in a few seconds, <a href="${safeUrl}">click here to continue</a>.</p>
+  </div>
+</body></html>`);
   } else {
     log.error({ err: result.error }, "oauth: google-callback failed");
-    res.status(400).send(`
-      <html><body>
-        <h1>Authentication Failed</h1>
-        <p>${result.error}</p>
-        <p>Please close this tab and try again.</p>
-      </body></html>
-    `);
+    res.status(400).send(`<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <title>Authentication failed — TaggingDocs MCP</title>
+  <style>body{font-family:-apple-system,sans-serif;max-width:420px;margin:10vh auto;padding:24px;background:#0f172a;color:#e2e8f0;border-radius:12px;}h1{color:#f87171;}p{color:#94a3b8;line-height:1.5;}</style>
+</head><body>
+  <h1>Authentication failed</h1>
+  <p>${result.error}</p>
+  <p>Close this tab and try connecting again from your AI client.</p>
+</body></html>`);
   }
 });
 
