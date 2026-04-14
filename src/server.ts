@@ -110,13 +110,20 @@ app.get("/.well-known/oauth-authorization-server", (_req, res) => {
   res.json(getOAuthMetadata());
 });
 
+// The MCP endpoint is the protected resource (not the origin). Serve the
+// metadata at both the root and under /mcp so clients find it regardless of
+// which discovery path they use.
+const protectedResourceMetadata = {
+  resource: `${BASE_URL}/mcp`,
+  authorization_servers: [BASE_URL],
+  scopes_supported: ["gtm:read", "gtm:write", "gtm:publish"],
+  bearer_methods_supported: ["header"],
+};
 app.get("/.well-known/oauth-protected-resource", (_req, res) => {
-  res.json({
-    resource: BASE_URL,
-    authorization_servers: [BASE_URL],
-    scopes_supported: ["gtm:read", "gtm:write", "gtm:publish"],
-    bearer_methods_supported: ["header"],
-  });
+  res.json(protectedResourceMetadata);
+});
+app.get("/mcp/.well-known/oauth-protected-resource", (_req, res) => {
+  res.json(protectedResourceMetadata);
 });
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -635,11 +642,23 @@ app.post("/mcp", mcpLimiter, async (req, res) => {
           // Authenticated → full server with docs + GTM tools
           mcpServer = createFullMcpServer(googleToken);
         } else {
-          // Token invalid/expired → docs only (don't block, just downgrade)
-          mcpServer = createDocsOnlyServer();
+          // A token was presented but we can't resolve it — tell the client to
+          // re-auth instead of silently downgrading. Silent downgrade leaves
+          // Claude Desktop / ChatGPT thinking they're fully connected while
+          // GTM tools mysteriously fail.
+          res.set(
+            "WWW-Authenticate",
+            `Bearer resource_metadata="${BASE_URL}/.well-known/oauth-protected-resource"`
+          );
+          res.status(401).json({
+            jsonrpc: "2.0",
+            error: { code: -32001, message: "Invalid or expired token — please re-authenticate" },
+            id: null,
+          });
+          return;
         }
       } else {
-        // No auth → docs only
+        // No auth header at all → docs-only mode (anonymous access is a feature).
         mcpServer = createDocsOnlyServer();
       }
 
