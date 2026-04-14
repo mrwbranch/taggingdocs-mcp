@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.js.map
+.env
+/data/
+*.db
+content-repo/
+.DS_Store
+
+# Internal-only docs — not shipped in the public repo
+CLAUDE.md
+GOOGLE_CLOUD_SETUP.md
+.claude/
