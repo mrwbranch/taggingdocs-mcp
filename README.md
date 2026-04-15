@@ -7,12 +7,12 @@ A hosted [Model Context Protocol](https://modelcontextprotocol.io) server that g
 - **Search the full TaggingDocs library** — every guide on GTM, GA4, server-side tagging, dataLayer design, Consent Mode v2, and integrations. No login required.
 - **Drive Google Tag Manager directly** — list, create, update, and publish tags, triggers, variables, folders, and versions across your GTM accounts. Signs in with your Google account.
 
-Already live at **`https://mcp.taggingdocs.com`** — just add it to your AI client.
+Already live at **`https://mcp.taggingdocs.com/mcp`** — just add it to your AI client.
 
 ## Connect in 30 seconds
 
 ### Claude.ai / Claude app
-Settings → Integrations → **Add custom integration** → paste `https://mcp.taggingdocs.com`.
+Settings → Integrations → **Add custom integration** → paste `https://mcp.taggingdocs.com/mcp`.
 
 ### Claude Code
 ```bash
@@ -20,7 +20,7 @@ claude mcp add -t http gtm https://mcp.taggingdocs.com/mcp
 ```
 
 ### ChatGPT
-OpenAI Apps → **Add MCP connector** → `https://mcp.taggingdocs.com`.
+OpenAI Apps → **Add MCP connector** → `https://mcp.taggingdocs.com/mcp`.
 
 ### Claude Desktop / Cursor / anything that speaks MCP over stdio
 ```bash
