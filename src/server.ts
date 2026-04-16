@@ -311,7 +311,7 @@ app.get("/", (_req, res) => {
     <p style="font-size:0.88rem;color:var(--muted);margin-bottom:14px;">Paste the URL with the <code>/mcp</code> suffix — some clients can't find the MCP endpoint without it.</p>
 
     <div class="connect-card">
-      <strong>Claude.ai / Claude App</strong>
+      <strong>Claude (claude.ai web and Claude Desktop app)</strong>
       <p>Customize (in the sidebar) → Connectors → <strong>Add custom connector</strong> → <code>${BASE_URL}/mcp</code></p>
     </div>
     <div class="connect-card">
@@ -323,7 +323,7 @@ app.get("/", (_req, res) => {
       <p>Settings → Connectors → <strong>Add custom MCP</strong> → <code>${BASE_URL}/mcp</code></p>
     </div>
     <div class="connect-card">
-      <strong>Claude Desktop / Cursor (stdio bridge)</strong>
+      <strong>Cursor &amp; other stdio MCP clients</strong>
       <p><code>npx mcp-remote ${BASE_URL}/mcp</code></p>
     </div>
 

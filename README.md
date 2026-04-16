@@ -15,8 +15,10 @@ Full documentation and screenshots: [taggingdocs.com/mcp](https://taggingdocs.co
 
 Paste the URL with the `/mcp` suffix — some clients accept the bare origin and then can't find the MCP endpoint, giving you an `McpEndpointNotFound` error.
 
-### Claude.ai / Claude app
+### Claude (claude.ai web and Claude Desktop app)
 **Customize** (in the left sidebar) → **Connectors** → **Add custom connector** → paste `https://mcp.taggingdocs.com/mcp`.
+
+Both claude.ai web and the native Claude Desktop app use the same native HTTP MCP flow — no `mcp-remote` bridge needed.
 
 ### Claude Code
 ```bash
@@ -26,10 +28,12 @@ claude mcp add -t http gtm https://mcp.taggingdocs.com/mcp
 ### ChatGPT
 Settings → **Connectors** → **Add custom MCP** → paste `https://mcp.taggingdocs.com/mcp`.
 
-### Claude Desktop / Cursor / anything that speaks MCP over stdio
+### Cursor and other MCP stdio clients
 ```bash
 npx mcp-remote https://mcp.taggingdocs.com/mcp
 ```
+
+`mcp-remote` is a stdio bridge for clients that don't speak remote MCP over HTTP natively.
 
 No sign-in is needed to read docs. When you ask the AI to touch a GTM container, it will prompt you to authorize with Google — once, then tokens refresh automatically.
 
