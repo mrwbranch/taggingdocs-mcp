@@ -308,10 +308,11 @@ app.get("/", (_req, res) => {
     </div>
 
     <h2>Connect in 30 seconds</h2>
+    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:14px;">Paste the URL with the <code>/mcp</code> suffix — some clients can't find the MCP endpoint without it.</p>
 
     <div class="connect-card">
       <strong>Claude.ai / Claude App</strong>
-      <p>Settings → Integrations → Add → <code>${BASE_URL}</code></p>
+      <p>Settings → Customize → Connectors → <strong>Add custom connector</strong> → <code>${BASE_URL}/mcp</code></p>
     </div>
     <div class="connect-card">
       <strong>Claude Code</strong>
@@ -319,10 +320,10 @@ app.get("/", (_req, res) => {
     </div>
     <div class="connect-card">
       <strong>ChatGPT</strong>
-      <p>OpenAI Apps → Add MCP → <code>${BASE_URL}</code></p>
+      <p>Settings → Connectors → <strong>Add custom MCP</strong> → <code>${BASE_URL}/mcp</code></p>
     </div>
     <div class="connect-card">
-      <strong>Claude Desktop / Cursor</strong>
+      <strong>Claude Desktop / Cursor (stdio bridge)</strong>
       <p><code>npx mcp-remote ${BASE_URL}/mcp</code></p>
     </div>
 
