@@ -312,7 +312,7 @@ app.get("/", (_req, res) => {
 
     <div class="connect-card">
       <strong>Claude.ai / Claude App</strong>
-      <p>Settings → Customize → Connectors → <strong>Add custom connector</strong> → <code>${BASE_URL}/mcp</code></p>
+      <p>Customize (in the sidebar) → Connectors → <strong>Add custom connector</strong> → <code>${BASE_URL}/mcp</code></p>
     </div>
     <div class="connect-card">
       <strong>Claude Code</strong>

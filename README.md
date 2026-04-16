@@ -16,7 +16,7 @@ Full documentation and screenshots: [taggingdocs.com/mcp](https://taggingdocs.co
 Paste the URL with the `/mcp` suffix — some clients accept the bare origin and then can't find the MCP endpoint, giving you an `McpEndpointNotFound` error.
 
 ### Claude.ai / Claude app
-Settings → **Customize** → **Connectors** → **Add custom connector** → paste `https://mcp.taggingdocs.com/mcp`.
+**Customize** (in the left sidebar) → **Connectors** → **Add custom connector** → paste `https://mcp.taggingdocs.com/mcp`.
 
 ### Claude Code
 ```bash
