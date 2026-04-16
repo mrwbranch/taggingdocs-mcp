@@ -282,8 +282,16 @@ app.get("/", (_req, res) => {
     .connect-card strong { font-size: 0.9rem; }
     .connect-card p { margin: 4px 0 0; font-size: 0.88rem; color: var(--muted); }
     code { background: var(--code-bg); padding: 2px 8px; border-radius: 4px; font-size: 0.85em; font-family: 'SF Mono', 'Fira Code', monospace; word-break: break-all; }
-    pre { background: var(--code-bg); border-radius: 6px; padding: 12px 14px; overflow-x: auto; font-size: 0.8rem; margin: 8px 0 0; }
+    pre { background: var(--code-bg); border-radius: 6px; padding: 12px 14px; overflow-x: auto; font-size: 0.8rem; margin: 0; }
     pre code { background: none; padding: 0; font-size: inherit; word-break: normal; }
+    .copy-row { display: flex; gap: 8px; align-items: center; margin: 6px 0 0; }
+    .copy-row > code { flex: 1; min-width: 0; padding: 8px 10px; font-size: 0.8rem; }
+    .copy-block { position: relative; margin: 8px 0 0; }
+    .copy-block .copy-btn { position: absolute; top: 6px; right: 6px; }
+    .copy-btn { background: var(--accent); color: #fff; border: 0; padding: 5px 11px; border-radius: 4px; font-size: 0.72rem; font-weight: 600; cursor: pointer; white-space: nowrap; letter-spacing: 0.02em; transition: background 0.15s; }
+    .copy-btn:hover { filter: brightness(1.08); }
+    .copy-btn.copied { background: #16a34a; }
+    .copy-btn.copied::before { content: '\\2713  '; }
     .try-list { list-style: none; padding: 0; margin: 16px 0; }
     .try-list li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.92rem; color: var(--muted); }
     .try-list li:last-child { border-bottom: none; }
@@ -314,21 +322,38 @@ app.get("/", (_req, res) => {
 
     <div class="connect-card">
       <strong>Claude (claude.ai web and Claude Desktop app)</strong>
-      <p>Customize (in the sidebar) → Connectors → <strong>Add custom connector</strong> → <code>${BASE_URL}/mcp</code></p>
+      <p>Customize (in the sidebar) → Connectors → <strong>Add custom connector</strong>, then paste:</p>
+      <div class="copy-row">
+        <code>${BASE_URL}/mcp</code>
+        <button class="copy-btn" type="button" data-copy="${BASE_URL}/mcp">Copy</button>
+      </div>
     </div>
     <div class="connect-card">
       <strong>Claude Code</strong>
-      <p><code>claude mcp add -t http gtm ${BASE_URL}/mcp</code></p>
+      <p>Run in a terminal:</p>
+      <div class="copy-row">
+        <code>claude mcp add -t http gtm ${BASE_URL}/mcp</code>
+        <button class="copy-btn" type="button" data-copy="claude mcp add -t http gtm ${BASE_URL}/mcp">Copy</button>
+      </div>
     </div>
     <div class="connect-card">
       <strong>ChatGPT</strong>
-      <p>Settings → Connectors → <strong>Add custom MCP</strong> → <code>${BASE_URL}/mcp</code></p>
+      <p>Settings → Connectors → <strong>Add custom MCP</strong>, then paste:</p>
+      <div class="copy-row">
+        <code>${BASE_URL}/mcp</code>
+        <button class="copy-btn" type="button" data-copy="${BASE_URL}/mcp">Copy</button>
+      </div>
     </div>
     <div class="connect-card">
       <strong>Cursor &amp; other stdio MCP clients</strong>
-      <p>One-off test: <code>npx mcp-remote ${BASE_URL}/mcp</code></p>
-      <p>Or add to your client's MCP config (Cursor's <code>~/.cursor/mcp.json</code>, VS Code, etc.):</p>
-      <pre><code>{
+      <p>One-off test from a terminal:</p>
+      <div class="copy-row">
+        <code>npx mcp-remote ${BASE_URL}/mcp</code>
+        <button class="copy-btn" type="button" data-copy="npx mcp-remote ${BASE_URL}/mcp">Copy</button>
+      </div>
+      <p style="margin-top:12px;">Or add to your client's MCP config (Cursor's <code>~/.cursor/mcp.json</code>, VS Code, etc.):</p>
+      <div class="copy-block">
+        <pre><code id="cursor-json">{
   "mcpServers": {
     "taggingdocs": {
       "command": "npx",
@@ -336,6 +361,8 @@ app.get("/", (_req, res) => {
     }
   }
 }</code></pre>
+        <button class="copy-btn" type="button" data-copy-target="#cursor-json">Copy</button>
+      </div>
     </div>
 
     <h2>Then try</h2>
@@ -358,6 +385,35 @@ app.get("/", (_req, res) => {
       <a href="${BASE_URL}/health">Health</a>
     </div>
   </div>
+  <script>
+    document.querySelectorAll('.copy-btn').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var text = btn.dataset.copy;
+        if (!text && btn.dataset.copyTarget) {
+          var el = document.querySelector(btn.dataset.copyTarget);
+          if (el) text = el.textContent;
+        }
+        if (!text) return;
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (e) {
+          // Fallback for old browsers / insecure contexts
+          var ta = document.createElement('textarea');
+          ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); } catch (_) {}
+          document.body.removeChild(ta);
+        }
+        var original = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(function () {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1500);
+      });
+    });
+  </script>
 </body></html>`);
 });
 
