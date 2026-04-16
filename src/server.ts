@@ -28,7 +28,7 @@ import { GTM_PROMPTS } from "./prompts.js";
 import { authLimiter, mcpLimiter, registrationLimiter } from "./rate-limit.js";
 import { flushStore } from "./token-store.js";
 import { log } from "./logger.js";
-import { privacyPolicyHtml, termsHtml } from "./pages/legal.js";
+import { privacyPolicyHtml, termsHtml, scopesHtml } from "./pages/legal.js";
 
 // ─── Config ───────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || "3000");
@@ -247,6 +247,11 @@ app.get("/terms", (_req, res) => {
   res.send(termsHtml(BASE_URL));
 });
 
+app.get("/scopes", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(scopesHtml(BASE_URL));
+});
+
 // ═══════════════════════════════════════════════════════════════════════
 // Landing page
 // ═══════════════════════════════════════════════════════════════════════
@@ -334,6 +339,7 @@ app.get("/", (_req, res) => {
     <div class="footer">
       <a href="https://taggingdocs.com">TaggingDocs</a>
       <a href="https://github.com/mrwbranch/taggingdocs-mcp">GitHub</a>
+      <a href="${BASE_URL}/scopes">Scopes</a>
       <a href="${BASE_URL}/privacy">Privacy</a>
       <a href="${BASE_URL}/terms">Terms</a>
       <a href="${BASE_URL}/.well-known/oauth-authorization-server">OAuth Metadata</a>

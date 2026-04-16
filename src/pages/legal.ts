@@ -1,7 +1,8 @@
-// ─── Legal pages: Privacy Policy + Terms of Service ──────────────────
-// Served at /privacy and /terms. Required for Google OAuth app verification
-// when using sensitive Tag Manager scopes — the Limited Use disclosure in the
-// Privacy Policy is what Google specifically looks for.
+// ─── Legal pages: Privacy Policy + Terms of Service + Scopes ─────────
+// Served at /privacy, /terms, and /scopes. Required for Google OAuth app
+// verification when using sensitive Tag Manager scopes — the Limited Use
+// disclosure in the Privacy Policy is what Google specifically looks for,
+// and /scopes gives reviewers a same-domain per-tool scope breakdown.
 
 export const LAST_UPDATED = "2026-04-16";
 
@@ -27,6 +28,10 @@ const SHARED_STYLES = `
   .muted { color:var(--muted); font-size:0.9rem; margin-bottom:24px; }
   .callout { background:var(--accent-light); border-radius:8px; padding:14px 18px; margin:20px 0; font-size:0.95rem; }
   .callout strong { display:block; margin-bottom:6px; }
+  table { border-collapse:collapse; width:100%; margin:14px 0 24px; font-size:0.9rem; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { font-weight:600; color:var(--muted); background:var(--code-bg); }
+  td code { white-space:nowrap; }
   .footer { margin-top:48px; padding-top:24px; border-top:1px solid var(--border); font-size:0.85rem; color:var(--muted); display:flex; gap:16px; flex-wrap:wrap; }
   .footer a { color:var(--muted); }
   .footer a:hover { color:var(--accent); }
@@ -47,6 +52,7 @@ function pageShell(title: string, body: string, baseUrl: string): string {
     ${body}
     <div class="footer">
       <a href="${baseUrl}">Home</a>
+      <a href="${baseUrl}/scopes">Scopes</a>
       <a href="${baseUrl}/privacy">Privacy</a>
       <a href="${baseUrl}/terms">Terms</a>
       <a href="https://github.com/mrwbranch/taggingdocs-mcp">GitHub</a>
@@ -221,4 +227,109 @@ export function termsHtml(baseUrl: string): string {
     <p>Questions about these terms: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a> or <a href="${GITHUB_ISSUES}">open a GitHub issue</a>.</p>
   `;
   return pageShell("Terms of Service", body, baseUrl);
+}
+
+export function scopesHtml(baseUrl: string): string {
+  const body = `
+    <h1>Scopes &amp; tools</h1>
+    <p class="muted">How the TaggingDocs MCP Server uses each Google OAuth scope — last updated ${LAST_UPDATED}.</p>
+
+    <p>The Server exposes <strong>35 tools</strong> to a connected AI client (4 documentation tools + 31 Google Tag Manager tools). Each tool is tied to one specific Tag Manager OAuth scope. The table below lists which scope each tool uses, so a user or reviewer can verify the Server never requests broader access than a registered tool actually needs.</p>
+
+    <p>Scopes are requested together during the initial OAuth consent so the user isn't prompted repeatedly; at runtime, each tool only exercises the single scope listed for it.</p>
+
+    <h2>Documentation tools — no Google scope</h2>
+
+    <p>These tools search and read <a href="https://taggingdocs.com">taggingdocs.com</a> content. They do not touch any Google API and are available without authentication.</p>
+
+    <table>
+      <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>search_taggingdocs</code></td><td>Full-text search across TaggingDocs articles.</td></tr>
+        <tr><td><code>read_taggingdocs_page</code></td><td>Fetch a single article by slug.</td></tr>
+        <tr><td><code>list_taggingdocs_sections</code></td><td>Browse the library by section.</td></tr>
+        <tr><td><code>lookup_event</code></td><td>Look up a GA4 event spec (e.g. <code>purchase</code>).</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Google Tag Manager scopes</h2>
+
+    <h3><code>https://www.googleapis.com/auth/tagmanager.readonly</code></h3>
+    <p>Read-only access. List and fetch GTM resources without modifying them. Needed for audits, reporting, and any "show me" request from the AI.</p>
+    <table>
+      <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>list_accounts</code></td><td>List GTM accounts the user has access to.</td></tr>
+        <tr><td><code>list_containers</code>, <code>get_container</code></td><td>List / read container metadata.</td></tr>
+        <tr><td><code>list_workspaces</code>, <code>get_workspace</code>, <code>get_workspace_status</code></td><td>List / read workspaces and pending changes.</td></tr>
+        <tr><td><code>list_tags</code>, <code>get_tag</code></td><td>List / read tag configurations.</td></tr>
+        <tr><td><code>list_triggers</code>, <code>get_trigger</code></td><td>List / read trigger configurations.</td></tr>
+        <tr><td><code>list_variables</code>, <code>get_variable</code></td><td>List / read user-defined variables.</td></tr>
+        <tr><td><code>list_folders</code></td><td>List folders in a workspace.</td></tr>
+        <tr><td><code>list_versions</code></td><td>List container versions.</td></tr>
+        <tr><td><code>list_built_in_variables</code></td><td>List enabled built-in variables.</td></tr>
+        <tr><td><code>list_templates</code></td><td>List custom tag and variable templates.</td></tr>
+      </tbody>
+    </table>
+
+    <h3><code>https://www.googleapis.com/auth/tagmanager.edit.containers</code></h3>
+    <p>Create, update, and delete GTM resources within a container. Needed whenever the user asks the AI to make changes to a workspace.</p>
+    <table>
+      <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>create_container</code></td><td>Create a new container in an account.</td></tr>
+        <tr><td><code>create_workspace</code></td><td>Create a workspace to stage changes in.</td></tr>
+        <tr><td><code>create_tag</code>, <code>update_tag</code>, <code>delete_tag</code></td><td>Create / update / delete a tag.</td></tr>
+        <tr><td><code>create_trigger</code>, <code>update_trigger</code>, <code>delete_trigger</code></td><td>Create / update / delete a trigger.</td></tr>
+        <tr><td><code>create_variable</code>, <code>update_variable</code>, <code>delete_variable</code></td><td>Create / update / delete a variable.</td></tr>
+        <tr><td><code>create_folder</code></td><td>Create a folder for organization.</td></tr>
+      </tbody>
+    </table>
+
+    <h3><code>https://www.googleapis.com/auth/tagmanager.edit.containerversions</code></h3>
+    <p>Freeze a workspace's staged changes into a numbered container version that can be reviewed before publishing.</p>
+    <table>
+      <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>create_version</code></td><td>Freeze the current workspace into a version.</td></tr>
+      </tbody>
+    </table>
+
+    <h3><code>https://www.googleapis.com/auth/tagmanager.publish</code></h3>
+    <p>Publish a container version (go live). Only invoked when the user explicitly asks the AI to publish.</p>
+    <table>
+      <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>publish_version</code></td><td>Publish the specified version so it goes live for site visitors.</td></tr>
+      </tbody>
+    </table>
+
+    <h3><code>https://www.googleapis.com/auth/tagmanager.manage.users</code></h3>
+    <p>Read account-level user permissions. Used by the container audit prompt to surface access / governance issues.</p>
+    <table>
+      <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>list_user_permissions</code></td><td>List users with access to the account and their permission level.</td></tr>
+      </tbody>
+    </table>
+
+    <h3><code>https://www.googleapis.com/auth/tagmanager.manage.accounts</code></h3>
+    <p>Read account-level settings. Requested alongside <code>manage.users</code> so audit prompts can see the full account context in a single grant. Not used to create or modify accounts.</p>
+
+    <h3><code>openid</code> and <code>email</code></h3>
+    <p>Used only to identify the user's session via their Google email address after the initial OAuth flow. No profile data beyond the email is fetched or stored. Details in the <a href="${baseUrl}/privacy">Privacy Policy</a>.</p>
+
+    <h2>Why these scopes and not narrower ones</h2>
+    <ul>
+      <li><strong>Read-only alone is insufficient</strong> — the Server's core feature is letting the user's AI make requested changes (create / update / delete tags, triggers, variables, folders), which requires <code>tagmanager.edit.containers</code>.</li>
+      <li><strong>Edit alone is insufficient</strong> — the audit workflow reviews changes before they go live, which requires versioning (<code>tagmanager.edit.containerversions</code>) and, when the user explicitly approves, publishing (<code>tagmanager.publish</code>).</li>
+      <li><strong>Account-level scopes</strong> are requested only for the audit prompt's governance checks. Users who never run audits do not cause the Server to exercise them.</li>
+    </ul>
+
+    <div class="callout">
+      <strong>Limited Use</strong>
+      The Server's use and transfer to any other app of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. Full disclosure in the <a href="${baseUrl}/privacy">Privacy Policy</a>.
+    </div>
+  `;
+  return pageShell("Scopes &amp; tools", body, baseUrl);
 }
