@@ -9,7 +9,11 @@ A hosted [Model Context Protocol](https://modelcontextprotocol.io) server that g
 
 Already live at **`https://mcp.taggingdocs.com/mcp`** — just add it to your AI client.
 
+Full documentation and screenshots: [taggingdocs.com/mcp](https://taggingdocs.com/mcp/). Per-client setup walkthroughs and troubleshooting: [taggingdocs.com/mcp/connect](https://taggingdocs.com/mcp/connect/).
+
 ## Connect in 30 seconds
+
+Paste the URL with the `/mcp` suffix — some clients accept the bare origin and then can't find the MCP endpoint, giving you an `McpEndpointNotFound` error.
 
 ### Claude.ai / Claude app
 Settings → Integrations → **Add custom integration** → paste `https://mcp.taggingdocs.com/mcp`.

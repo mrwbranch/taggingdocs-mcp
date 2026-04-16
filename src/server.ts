@@ -28,6 +28,7 @@ import { GTM_PROMPTS } from "./prompts.js";
 import { authLimiter, mcpLimiter, registrationLimiter } from "./rate-limit.js";
 import { flushStore } from "./token-store.js";
 import { log } from "./logger.js";
+import { privacyPolicyHtml, termsHtml } from "./pages/legal.js";
 
 // ─── Config ───────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || "3000");
@@ -233,6 +234,20 @@ app.post("/oauth/revoke", (_req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
+// Legal pages — required for Google OAuth verification
+// ═══════════════════════════════════════════════════════════════════════
+
+app.get("/privacy", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(privacyPolicyHtml(BASE_URL));
+});
+
+app.get("/terms", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(termsHtml(BASE_URL));
+});
+
+// ═══════════════════════════════════════════════════════════════════════
 // Landing page
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -318,7 +333,9 @@ app.get("/", (_req, res) => {
 
     <div class="footer">
       <a href="https://taggingdocs.com">TaggingDocs</a>
-      <a href="https://github.com/mrwbranch/taggingdocs">GitHub</a>
+      <a href="https://github.com/mrwbranch/taggingdocs-mcp">GitHub</a>
+      <a href="${BASE_URL}/privacy">Privacy</a>
+      <a href="${BASE_URL}/terms">Terms</a>
       <a href="${BASE_URL}/.well-known/oauth-authorization-server">OAuth Metadata</a>
       <a href="${BASE_URL}/health">Health</a>
     </div>
