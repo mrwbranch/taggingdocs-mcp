@@ -29,11 +29,27 @@ claude mcp add -t http gtm https://mcp.taggingdocs.com/mcp
 Settings → **Connectors** → **Add custom MCP** → paste `https://mcp.taggingdocs.com/mcp`.
 
 ### Cursor and other MCP stdio clients
+
+`mcp-remote` is a stdio bridge for clients that don't speak remote MCP over HTTP natively. You can either run it one-off:
+
 ```bash
 npx mcp-remote https://mcp.taggingdocs.com/mcp
 ```
 
-`mcp-remote` is a stdio bridge for clients that don't speak remote MCP over HTTP natively.
+Or wire it into the client's MCP config (Cursor's `~/.cursor/mcp.json`, VS Code's MCP extension, Windsurf, etc.):
+
+```json
+{
+  "mcpServers": {
+    "taggingdocs": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://mcp.taggingdocs.com/mcp"]
+    }
+  }
+}
+```
+
+The first time Cursor invokes a GTM tool, `mcp-remote` opens your browser to complete the Google OAuth flow; subsequent invocations use the cached refresh token.
 
 No sign-in is needed to read docs. When you ask the AI to touch a GTM container, it will prompt you to authorize with Google — once, then tokens refresh automatically.
 

@@ -282,6 +282,8 @@ app.get("/", (_req, res) => {
     .connect-card strong { font-size: 0.9rem; }
     .connect-card p { margin: 4px 0 0; font-size: 0.88rem; color: var(--muted); }
     code { background: var(--code-bg); padding: 2px 8px; border-radius: 4px; font-size: 0.85em; font-family: 'SF Mono', 'Fira Code', monospace; word-break: break-all; }
+    pre { background: var(--code-bg); border-radius: 6px; padding: 12px 14px; overflow-x: auto; font-size: 0.8rem; margin: 8px 0 0; }
+    pre code { background: none; padding: 0; font-size: inherit; word-break: normal; }
     .try-list { list-style: none; padding: 0; margin: 16px 0; }
     .try-list li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.92rem; color: var(--muted); }
     .try-list li:last-child { border-bottom: none; }
@@ -324,7 +326,16 @@ app.get("/", (_req, res) => {
     </div>
     <div class="connect-card">
       <strong>Cursor &amp; other stdio MCP clients</strong>
-      <p><code>npx mcp-remote ${BASE_URL}/mcp</code></p>
+      <p>One-off test: <code>npx mcp-remote ${BASE_URL}/mcp</code></p>
+      <p>Or add to your client's MCP config (Cursor's <code>~/.cursor/mcp.json</code>, VS Code, etc.):</p>
+      <pre><code>{
+  "mcpServers": {
+    "taggingdocs": {
+      "command": "npx",
+      "args": ["mcp-remote", "${BASE_URL}/mcp"]
+    }
+  }
+}</code></pre>
     </div>
 
     <h2>Then try</h2>
